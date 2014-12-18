@@ -76,6 +76,15 @@ public class FFT {
       return conj;
    }
 
+   private Complex[] squarePolynomial(Complex[] A) {
+      Complex[] A_squared = doFFT(A, A.length);
+      for(int i = 0; i < A_squared.length; i++) {
+         A_squared[i] = A_squared[i].times(A_squared[i]);
+      }
+      A_squared = inverseFFT(A_squared, A_squared.length);
+      return A_squared;
+   }
+   
    private Complex[] roundAll(Complex[] in, int places) {
       Complex[] result = new Complex[in.length];
       for (int i = 0; i < in.length; i++) {
@@ -122,7 +131,18 @@ public class FFT {
          Complex[] original = inverseFFT(output, coefficients.length);
          //System.out.println(Arrays.toString(original));
          printPretty(roundAll(original, 3));
-
+         System.out.println();
+         System.out.println("Square result:");
+         Complex[] sq = new Complex[2*original.length];
+         for(int i = 0; i < sq.length; i++) {
+            if(i < sq.length/2) {
+               sq[i] = original[i];
+            } else {
+               sq[i] = new Complex(0, 0);
+            }
+         }
+         sq = squarePolynomial(sq);
+         printPretty(roundAll(sq, 3));
       } else {
          System.out.println(":(");
       }
