@@ -4,7 +4,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.Arrays;
 
-public class Cwk2Question5 {
+public class Cwk2Question6 {
 	Complex[] t, p;
 
 	private boolean readInput() {
@@ -27,7 +27,11 @@ public class Cwk2Question5 {
 			p = new Complex[pattern.length()];
 			for (int i = 0; i < t.length; i++) {
 				try {
-					t[i] = new Complex((int) (text.charAt(i)), 0);
+					if (text.charAt(i) == '?') {
+						t[i] = new Complex(0, 0);
+					} else {
+						t[i] = new Complex((int) (text.charAt(i)), 0);
+					}
 				} catch (Exception e) {
 					System.err
 							.println("Error parsing text string in input file.");
@@ -36,7 +40,11 @@ public class Cwk2Question5 {
 			}
 			for (int i = 0; i < p.length; i++) {
 				try {
-					p[i] = new Complex((int) (pattern.charAt(i)), 0);
+					if (pattern.charAt(i) == '?') {
+						p[i] = new Complex(0, 0);
+					} else {
+						p[i] = new Complex((int) (pattern.charAt(i)), 0);
+					}
 				} catch (Exception e) {
 					System.err
 							.println("Error parsing pattern string in input file.");
@@ -102,6 +110,7 @@ public class Cwk2Question5 {
 	 * strategy: add necessary padding to p, and add this same amount of padding
 	 * to t
 	 */
+	// TODO: works for wildcards but broke others :(
 	private int match() {
 		// holds current substring from the text to compare to pattern
 		Complex[] ts;
@@ -137,36 +146,49 @@ public class Cwk2Question5 {
 						ts_pv[j] = new Complex(0, 0);
 						p_pv[j] = new Complex(0, 0);
 					} else { // otherwise copy in the vals
-						ts_pv[j] = ts[j];
-						p_pv[j] = p[j];
+						// if this char is a wildcard for either the pattern
+						// or the text, then set to 0 in both strings
+						if (ts[j].getReal() == 0 || p[j].getReal() == 0) {
+							ts_pv[j] = new Complex(0, 0);
+							p_pv[j] = new Complex(0, 0);
+						} else {
+							ts_pv[j] = ts[j];
+							p_pv[j] = p[j];
+						}
 					}
 				} else { // pad the empty second half with zeroes
 					ts_pv[j] = new Complex(0, 0);
 					p_pv[j] = new Complex(0, 0);
 				}
 			}
-			// System.out.println("in t:  " + Arrays.toString(ts_pv));
-			// System.out.println("in p:  " + Arrays.toString(p_pv));
+			//System.out.println("in t:  " + Arrays.toString(ts_pv));
+			//System.out.println("in p:  " + Arrays.toString(p_pv));
 			ts_pv = doFFT(ts_pv, ts_pv.length);
 			p_pv = doFFT(p_pv, p_pv.length);
-			// System.out.println("fft:  " + Arrays.toString(p_pv));
-			// System.out.println("fft:  " + Arrays.toString(ts_pv));
+			//System.out.println("fft:  " + Arrays.toString(p_pv));
+			//System.out.println("fft:  " + Arrays.toString(ts_pv));
 			for (int j = 0; j < p_pv.length; j++) {
 				/*
-				 * Sum((p-t)^2) = Sum(p^2-2pt+t^2) ... = 0 if there's a match
+				 * Sum(pt(p-t)^2) = Sum(p^3t-2p^2t^2+pt^3) ... = 0 if there's a
+				 * match
 				 */
 				p_pv[j] = p_pv[j]
 						.times(p_pv[j])
-						.minus(p_pv[j].times(ts_pv[j]).times(new Complex(2, 0)))
-						.plus(ts_pv[j].times(ts_pv[j]));
+						.times(p_pv[j])
+						.times(ts_pv[j])
+						.minus(p_pv[j].times(p_pv[j]).times(ts_pv[j])
+								.times(ts_pv[j]).times(new Complex(2, 0)))
+						.plus(p_pv[j].times(ts_pv[j].times(ts_pv[j]).times(
+								ts_pv[j])));
 			}
-			// System.out.println("vals: " + Arrays.toString(p_pv));
+			//System.out.println("vals: " + Arrays.toString(p_pv));
 			p_pv = inverseFFT(p_pv, p_pv.length);
-			// System.out.println("out: " + Arrays.toString(p_pv));
+			//System.out.println("out:  " + Arrays.toString(p_pv));
 
 			// check whether all elements = 0
 			int r = 0;
 			for (Complex c : p_pv) {
+				//System.out.println("c = " + c.round(3).getReal());
 				if (c.round(3).getReal() == 0) {
 					r++;
 				} else {
@@ -195,7 +217,7 @@ public class Cwk2Question5 {
 	}
 
 	public static void main(String[] args) {
-		Cwk2Question5 match = new Cwk2Question5();
+		Cwk2Question6 match = new Cwk2Question6();
 		match.run();
 	}
 }
